@@ -80,16 +80,23 @@ class NotificationsScreen extends StatelessWidget {
                     ),
                     onPressed: () async {
                       final scheduledDate = DateTime.now().add(const Duration(seconds: 10));
-                      await NotificationService.instance.scheduleNotification(
-                        id: 99,
-                        title: 'Pengingat Konser Dimulai ⏰',
-                        body: 'Konser musik favoritmu akan segera dimulai dalam waktu dekat!',
-                        scheduledDate: scheduledDate,
-                      );
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Pengingat konser disetel untuk 10 detik lagi!')),
-                      );
+                      try {
+                        await NotificationService.instance.scheduleNotification(
+                          id: 99,
+                          title: 'Pengingat Konser Dimulai ⏰',
+                          body: 'Konser musik favoritmu akan segera dimulai dalam waktu dekat!',
+                          scheduledDate: scheduledDate,
+                        );
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Pengingat konser disetel untuk 10 detik lagi!')),
+                        );
+                      } catch (e) {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Gagal menyetel pengingat: $e')),
+                        );
+                      }
                     },
                   ),
                 ),

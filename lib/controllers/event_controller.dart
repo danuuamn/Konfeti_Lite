@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../models/event_model.dart';
 import '../services/local_db_service.dart';
 import '../services/location_service.dart';
+import '../services/spotify_service.dart';
 
 class EventController extends GetxController {
   final RxList<EventModel> events = <EventModel>[].obs;
@@ -10,6 +11,7 @@ class EventController extends GetxController {
   final RxString searchQuery = ''.obs;
 
   final Rx<Position?> userPosition = Rx<Position?>(null);
+  final RxMap<String, String> artistImages = <String, String>{}.obs;
   final RxString locationStatus = 'Mencari lokasi GPS...'.obs;
 
   @override
@@ -24,8 +26,18 @@ class EventController extends GetxController {
     try {
       final list = LocalDbService.getEvents();
       events.assignAll(list);
+      loadArtistImages();
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  // Ambil foto artis dari Spotify untuk tiap event.
+  Future<void> loadArtistImages() async {
+    for (final e in events) {
+      if (artistImages.containsKey(e.artist)) continue;
+      final url = await SpotifyService.getArtistImage(e.artist);
+      if (url != null) artistImages[e.artist] = url;
     }
   }
 

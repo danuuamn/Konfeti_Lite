@@ -11,6 +11,7 @@ class TicketModel {
   final String orderDate;
   final String eventDate;
   final String state;
+  final String redirectUrl;
 
   TicketModel({
     required this.ticketCode,
@@ -25,9 +26,12 @@ class TicketModel {
     required this.orderDate,
     required this.eventDate,
     this.state = 'active',
+    this.redirectUrl = '',
   });
 
   bool get isActive => state == 'active';
+  bool get isPending => state == 'pending';
+  bool get isFailed => state == 'failed';
 
   factory TicketModel.fromJson(Map<String, dynamic> json) {
     return TicketModel(
@@ -43,6 +47,7 @@ class TicketModel {
       orderDate: (json['order_date'] ?? '') as String,
       eventDate: (json['event_date'] ?? '') as String,
       state: (json['state'] ?? 'active') as String,
+      redirectUrl: (json['redirect_url'] ?? '') as String,
     );
   }
 
@@ -60,6 +65,7 @@ class TicketModel {
       'order_date': orderDate,
       'event_date': eventDate,
       'state': state,
+      'redirect_url': redirectUrl,
     };
   }
 }

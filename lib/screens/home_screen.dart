@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../core/event_image.dart';
 import '../controllers/auth_controller.dart';
 import '../controllers/event_controller.dart';
 import '../core/formatters.dart';
@@ -268,19 +269,7 @@ class HomeScreen extends StatelessWidget {
           children: [
             Stack(
               children: [
-                Image.network(
-                  event.imageUrl,
-                  height: 160,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    height: 160,
-                    color: const Color(0xFF1E1A34),
-                    child: const Center(
-                      child: Icon(Icons.music_note_rounded, size: 48, color: Color(0xFF64748B)),
-                    ),
-                  ),
-                ),
+                EventImage(event: event, height: 160, iconSize: 48),
                 Positioned.fill(
                   child: DecoratedBox(
                     decoration: BoxDecoration(

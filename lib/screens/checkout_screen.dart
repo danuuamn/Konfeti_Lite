@@ -39,7 +39,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Future<void> _submitOrder() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    final success = await _ticketCtrl.bookTicket(
+    final success = await _ticketCtrl.startPayment(
       event: widget.event,
       tier: widget.tier,
       qty: _qty,
@@ -50,9 +50,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     if (success) {
       Get.back();
       Get.snackbar(
-        'Tiket Berhasil Dipesan! 🎉',
-        'Tiket konser telah terbit dan siap digunakan.',
-        backgroundColor: const Color(0xFF10B981),
+        'Menuju Pembayaran Midtrans',
+        'Selesaikan pembayaran, lalu kembali ke aplikasi. Tiket aktif setelah pembayaran berhasil.',
+        backgroundColor: const Color(0xFF8B5CF6),
         colorText: Colors.white,
         snackPosition: SnackPosition.TOP,
       );
@@ -199,7 +199,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('Pembayaran Instan (Midtrans)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white)),
-                          Text('Konfirmasi otomatis & tiket langsung terbit', style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
+                          Text('Bayar lewat Midtrans, tiket terbit setelah pembayaran berhasil', style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
                         ],
                       ),
                     ),
@@ -249,7 +249,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             height: 22,
                             child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                           )
-                        : const Text('Bayar Sekarang & Terbitkan Tiket', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+                        : const Text('Bayar dengan Midtrans', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
                   ),
                 );
               }),

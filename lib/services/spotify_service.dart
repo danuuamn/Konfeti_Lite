@@ -7,9 +7,11 @@ class SpotifyService {
   static const String _clientSecret = 'd5f875b4454a48b5a2276baa8f418571';
 
   static String? _accessToken;
+  static DateTime _tokenExpires = DateTime.fromMillisecondsSinceEpoch(0);
+  static final Map<String, String?> _imageCache = {};
 
   static Future<String?> _getToken() async {
-    if (_accessToken != null) return _accessToken;
+    if (_accessToken != null && DateTime.now().isBefore(_tokenExpires)) return _accessToken;
 
     try {
       final credentials = base64Encode(utf8.encode('$_clientId:$_clientSecret'));
@@ -25,10 +27,42 @@ class SpotifyService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         _accessToken = data['access_token'] as String?;
+        final seconds = (data['expires_in'] as num?)?.toInt() ?? 3600;
+        _tokenExpires = DateTime.now().add(Duration(seconds: seconds - 60));
         return _accessToken;
       }
     } catch (_) {}
     return null;
+  }
+
+  // Foto profil artis dari Spotify (dipakai sebagai thumbnail event).
+  static Future<String?> getArtistImage(String artistName) async {
+    final key = artistName.toLowerCase();
+    if (_imageCache.containsKey(key)) return _imageCache[key];
+
+    try {
+      final token = await _getToken();
+      if (token == null) return null;
+
+      final res = await http.get(
+        Uri.parse(
+          'https://api.spotify.com/v1/search?q=${Uri.encodeComponent(artistName)}&type=artist&limit=1',
+        ),
+        headers: {'Authorization': 'Bearer $token'},
+      ).timeout(const Duration(seconds: 8));
+
+      if (res.statusCode != 200) return null;
+
+      final items = jsonDecode(res.body)['artists']['items'] as List;
+      if (items.isEmpty) return null;
+
+      final images = items[0]['images'] as List?;
+      final url = (images != null && images.isNotEmpty) ? images[0]['url'] as String? : null;
+      _imageCache[key] = url;
+      return url;
+    } catch (_) {
+      return null;
+    }
   }
 
   static Future<List<SpotifyTrack>> getArtistTracks(String artistName) async {

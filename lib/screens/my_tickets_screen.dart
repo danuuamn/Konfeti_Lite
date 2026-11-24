@@ -33,15 +33,15 @@ class MyTicketsScreen extends StatelessWidget {
         ),
         body: TabBarView(
           children: [
-            _buildList(ticketCtrl.activeTickets, ticketCtrl),
-            _buildList(ticketCtrl.historyTickets, ticketCtrl),
+            _buildList(() => ticketCtrl.activeTickets, ticketCtrl),
+            _buildList(() => ticketCtrl.historyTickets, ticketCtrl),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildList(List<TicketModel> tickets, TicketController ctrl) {
+  Widget _buildList(List<TicketModel> Function() getTickets, TicketController ctrl) {
     return Obx(() {
       if (ctrl.tickets.isEmpty) {
         return Center(
@@ -62,6 +62,7 @@ class MyTicketsScreen extends StatelessWidget {
         );
       }
 
+      final tickets = getTickets();
       if (tickets.isEmpty) {
         return const Center(
           child: Text('Tidak ada tiket di kategori ini.', style: TextStyle(color: Color(0xFF64748B))),
@@ -82,7 +83,7 @@ class MyTicketsScreen extends StatelessWidget {
             ),
             child: InkWell(
               borderRadius: BorderRadius.circular(14),
-              onTap: () => Get.to(() => TicketQrScreen(ticket: ticket)),
+              onTap: ticket.isActive ? () => Get.to(() => TicketQrScreen(ticket: ticket)) : null,
               child: Padding(
                 padding: const EdgeInsets.all(14.0),
                 child: Column(
@@ -102,12 +103,12 @@ class MyTicketsScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF10B981).withOpacity(0.15),
+                            color: _statusColor(ticket).withOpacity(0.15),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            ticket.tierName,
-                            style: const TextStyle(color: Color(0xFF10B981), fontSize: 11, fontWeight: FontWeight.bold),
+                            ticket.isActive ? ticket.tierName : _statusLabel(ticket),
+                            style: TextStyle(color: _statusColor(ticket), fontSize: 11, fontWeight: FontWeight.bold),
                           ),
                         ),
                       ],
@@ -148,7 +149,8 @@ class MyTicketsScreen extends StatelessWidget {
                           Formatters.rupiah(ticket.priceIdr),
                           style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13),
                         ),
-                        const Row(
+                        if (ticket.isActive)
+                          const Row(
                           children: [
                             Icon(Icons.qr_code_2_rounded, size: 16, color: Color(0xFF8B5CF6)),
                             SizedBox(width: 4),
@@ -158,6 +160,19 @@ class MyTicketsScreen extends StatelessWidget {
                             ),
                           ],
                         ),
+                        if (ticket.isPending)
+                          Row(
+                            children: [
+                              TextButton(
+                                onPressed: () => ctrl.continuePayment(ticket),
+                                child: const Text('Bayar', style: TextStyle(color: Color(0xFFEC4899), fontWeight: FontWeight.bold)),
+                              ),
+                              TextButton(
+                                onPressed: () => ctrl.refreshPending(showMessage: true),
+                                child: const Text('Cek Status', style: TextStyle(color: Color(0xFF8B5CF6), fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          ),
                       ],
                     ),
                   ],
@@ -168,5 +183,17 @@ class MyTicketsScreen extends StatelessWidget {
         },
       );
     });
+  }
+
+  Color _statusColor(TicketModel t) {
+    if (t.isPending) return const Color(0xFFF59E0B);
+    if (t.isFailed) return const Color(0xFFEF4444);
+    return const Color(0xFF10B981);
+  }
+
+  String _statusLabel(TicketModel t) {
+    if (t.isPending) return 'Menunggu Pembayaran';
+    if (t.isFailed) return 'Gagal / Kedaluwarsa';
+    return t.tierName;
   }
 }

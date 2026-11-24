@@ -1,6 +1,7 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../core/event_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../controllers/event_controller.dart';
 import '../core/formatters.dart';
@@ -84,17 +85,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             borderRadius: BorderRadius.circular(16),
             child: Stack(
               children: [
-                Image.network(
-                  event.imageUrl,
-                  height: 200,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    height: 200,
-                    color: const Color(0xFF1E1A34),
-                    child: const Center(child: Icon(Icons.music_note, size: 64, color: Color(0xFF64748B))),
-                  ),
-                ),
+                EventImage(event: event, height: 200, iconSize: 64),
                 Positioned(
                   top: 12,
                   right: 12,

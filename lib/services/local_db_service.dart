@@ -130,13 +130,14 @@ class LocalDbService {
     required int qty,
     required String buyerName,
     required String buyerNik,
+    required String ticketCode,
+    String state = 'pending',
+    String redirectUrl = '',
   }) async {
     final box = Hive.box(_kTicketsBox);
 
-    final randomCode = 'KNF-${DateTime.now().year}-${10000 + DateTime.now().millisecond % 90000}';
-
     final ticket = TicketModel(
-      ticketCode: randomCode,
+      ticketCode: ticketCode,
       eventId: event.id,
       eventTitle: event.title,
       artist: event.artist,
@@ -147,12 +148,22 @@ class LocalDbService {
       buyerNik: buyerNik,
       orderDate: 'Hari ini',
       eventDate: event.eventDate,
-      state: 'active',
+      state: state,
+      redirectUrl: redirectUrl,
     );
 
     await box.put(ticket.ticketCode, jsonEncode(ticket.toJson()));
 
     return ticket;
+  }
+
+  static Future<void> updateTicketState(String ticketCode, String state) async {
+    final box = Hive.box(_kTicketsBox);
+    final raw = box.get(ticketCode);
+    if (raw == null) return;
+    final map = jsonDecode(raw.toString()) as Map<String, dynamic>;
+    map['state'] = state;
+    await box.put(ticketCode, jsonEncode(map));
   }
 
   static List<TicketModel> getMyTickets() {

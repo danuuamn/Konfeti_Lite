@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -73,18 +74,26 @@ class NotificationService {
   }) async {
     await init();
 
-    final tzDateTime = tz.TZDateTime.from(scheduledDate, tz.local);
-    final targetTime = tzDateTime.isBefore(tz.TZDateTime.now(tz.local))
-        ? tz.TZDateTime.now(tz.local).add(const Duration(seconds: 10))
-        : tzDateTime;
+    final now = tz.TZDateTime.now(tz.local);
+    var target = tz.TZDateTime.from(scheduledDate, tz.local);
+    if (!target.isAfter(now)) target = now.add(const Duration(seconds: 10));
 
-    await _notificationsPlugin.zonedSchedule(
-      id: id,
-      scheduledDate: targetTime,
-      notificationDetails: _notificationDetails(),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      title: title,
-      body: body,
-    );
+    Future<void> schedule(AndroidScheduleMode mode) {
+      return _notificationsPlugin.zonedSchedule(
+        id: id,
+        scheduledDate: target,
+        notificationDetails: _notificationDetails(),
+        androidScheduleMode: mode,
+        title: title,
+        body: body,
+      );
+    }
+
+    try {
+      await schedule(AndroidScheduleMode.exactAllowWhileIdle);
+    } on PlatformException {
+      // Izin alarm tepat waktu ditolak sistem: pakai mode tidak tepat agar tetap muncul.
+      await schedule(AndroidScheduleMode.inexactAllowWhileIdle);
+    }
   }
 }
